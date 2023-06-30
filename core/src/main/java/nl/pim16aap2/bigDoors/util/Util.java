@@ -350,7 +350,7 @@ public final class Util
     public static void playSound(Location loc, String sound, float volume, float pitch)
     {
 
-        Bukkit.getScheduler().callSyncMethod(BigDoors.get(), () ->
+        BigDoors.getScheduler().callSyncMethod(() ->
         {
             playSoundSync(loc, sound, volume, pitch);
             return null;
@@ -946,6 +946,6 @@ public final class Util
         Callable<T> callable, long timeout, TimeUnit unit, @Nullable T fallback)
     {
         return futureToCompletableFuture(
-            Bukkit.getScheduler().callSyncMethod(BigDoors.get(), callable), timeout, unit, fallback);
+            BigDoors.getScheduler().callSyncMethod(callable), timeout, unit, fallback);
     }
 }

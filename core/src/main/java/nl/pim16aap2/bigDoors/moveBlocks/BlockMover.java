@@ -19,7 +19,7 @@ import org.bukkit.block.PistonMoveReaction;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.material.MaterialData;
-import org.bukkit.scheduler.BukkitRunnable;
+import com.github.Anon8281.universalScheduler.UniversalRunnable;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -74,7 +74,7 @@ public abstract class BlockMover
 
             final Block block = newLocation.getBlock();
             if (block.getPistonMoveReaction() == PistonMoveReaction.BREAK)
-                Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, block::breakNaturally, 1L);
+                BigDoors.getScheduler().scheduleSyncDelayedTask(block::breakNaturally, 1L);
         }
 
         for (Entity entity : powerBlockLoc.getWorld().getNearbyEntities(powerBlockLoc, 1.1, 1.1, 1.1))
@@ -158,7 +158,7 @@ public abstract class BlockMover
         if (onDisable)
             return;
 
-        new BukkitRunnable()
+        new UniversalRunnable()
         {
             @Override
             public void run()

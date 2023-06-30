@@ -14,14 +14,13 @@ import nl.pim16aap2.bigDoors.util.DoorDirection;
 import nl.pim16aap2.bigDoors.util.MyBlockData;
 import nl.pim16aap2.bigDoors.util.RotateDirection;
 import nl.pim16aap2.bigDoors.util.Util;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.material.MaterialData;
-import org.bukkit.scheduler.BukkitRunnable;
+import com.github.Anon8281.universalScheduler.UniversalRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ public class BridgeMover extends BlockMover
     private final int xMin, yMin, zMin;
     private final int xMax, yMax, zMax;
     private int endCount;
-    private BukkitRunnable animationRunnable;
+    private UniversalRunnable animationRunnable;
 
     @SuppressWarnings("deprecation")
     public BridgeMover(BigDoors plugin, World world, double time, Door door, RotateDirection upDown,
@@ -186,7 +185,7 @@ public class BridgeMover extends BlockMover
 
         endStepSum = upDown.equals(RotateDirection.UP) ? 0 : Math.PI / 2 * stepMultiplier;
         startStepSum = upDown.equals(RotateDirection.DOWN) ? 0 : startStepSum;
-        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, this::createAnimatedBlocks, 2L);
+        BigDoors.getScheduler().scheduleSyncDelayedTask(this::createAnimatedBlocks, 2L);
     }
 
     private void createAnimatedBlocks()
@@ -345,8 +344,7 @@ public class BridgeMover extends BlockMover
     private void rotateEntities()
     {
         endCount = (int) (20.0f / tickRate * time);
-
-        animationRunnable = new BukkitRunnable()
+        animationRunnable = new UniversalRunnable()
         {
             final Location center = new Location(world, turningPoint.getBlockX() + 0.5, yMin, turningPoint.getBlockZ() + 0.5);
             boolean replace = false;
@@ -385,7 +383,7 @@ public class BridgeMover extends BlockMover
                     for (MyBlockData savedBlock : savedBlocks)
                         if (!savedBlock.getMat().equals(Material.AIR))
                             savedBlock.getFBlock().setVelocity(new Vector(0D, 0D, 0D));
-                    Bukkit.getScheduler().callSyncMethod(plugin, () ->
+                    BigDoors.getScheduler().callSyncMethod(() ->
                     {
                         putBlocks(false);
                         return null;
@@ -399,7 +397,7 @@ public class BridgeMover extends BlockMover
                     // Also, this stuff needs to be done on the main thread.
                     if (replace)
                     {
-                        Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () ->
+                        BigDoors.getScheduler().scheduleSyncDelayedTask(() ->
                         {
                             for (MyBlockData block : savedBlocks)
                             {
