@@ -1,5 +1,6 @@
 package nl.pim16aap2.bigDoors.moveBlocks;
 
+import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import nl.pim16aap2.bigDoors.BigDoors;
 import nl.pim16aap2.bigDoors.Door;
 import nl.pim16aap2.bigDoors.NMS.CustomCraftFallingBlock;
@@ -97,28 +98,33 @@ public class VerticalMover extends BlockMover
                     Location startLocation = new Location(world, xAxis + 0.5, yAxis, zAxis + 0.5);
                     Location newFBlockLocation = new Location(world, xAxis + 0.5, yAxis, zAxis + 0.5);
                     Block vBlock = world.getBlockAt(startLocation);
-                    Material mat = vBlock.getType();
-                    if (Util.isAllowedBlock(mat))
-                    {
-                        byte matData = vBlock.getData();
-                        BlockState bs = vBlock.getState();
-                        MaterialData materialData = bs.getData();
-                        NMSBlock block = fabf.nmsBlockFactory(world, xAxis, yAxis, zAxis);
+                    int finalXAxis = xAxis;
+                    int finalYAxis = yAxis;
+                    int finalZAxis = zAxis;
+                    BigDoors.getScheduler().runTask(vBlock.getLocation(), () -> {
+                        Material mat = vBlock.getType();
+                        if (Util.isAllowedBlock(mat))
+                        {
+                            byte matData = vBlock.getData();
+                            BlockState bs = vBlock.getState();
+                            MaterialData materialData = bs.getData();
+                            NMSBlock block = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
 
-                        if (!BigDoors.isOnFlattenedVersion())
-                            vBlock.setType(Material.AIR);
+                            if (!BigDoors.isOnFlattenedVersion() || UniversalScheduler.isFolia)
+                                vBlock.setType(Material.AIR);
 
-                        CustomCraftFallingBlock fBlock = null;
-                        if (!instantOpen)
-                            fBlock = fabf.fallingBlockFactory(newFBlockLocation, block, matData, mat);
-                        savedBlocks
-                            .add(new MyBlockData(mat, matData, fBlock, 0, materialData, block, 0, startLocation));
+                            CustomCraftFallingBlock fBlock = null;
+                            if (!instantOpen)
+                                fBlock = fabf.fallingBlockFactory(newFBlockLocation, block, matData, mat);
+                            savedBlocks
+                                    .add(new MyBlockData(mat, matData, fBlock, 0, materialData, block, 0, startLocation));
 
-                        if (xAxis == xMin || xAxis == xMax ||
-                            yAxis == yMin || yAxis == yMax ||
-                            zAxis == zMin || zAxis == zMax)
-                            edges.add(block);
-                    }
+                            if (finalXAxis == xMin || finalXAxis == xMax ||
+                                    finalYAxis == yMin || finalYAxis == yMax ||
+                                    finalZAxis == zMin || finalZAxis == zMax)
+                                edges.add(block);
+                        }
+                    });
                 }
                 ++zAxis;
             }

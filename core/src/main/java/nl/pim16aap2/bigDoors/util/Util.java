@@ -338,18 +338,19 @@ public final class Util
 
     private static void playSoundSync(Location loc, String sound, float volume, float pitch)
     {
-        final int range = BigDoors.get().getConfigLoader().getSoundRange();
-        if (range < 1)
-            return;
-        for (Entity ent : loc.getWorld().getNearbyEntities(loc, range, range, range))
-            if (ent instanceof Player)
-                ((Player) ent).playSound(loc, sound, volume, pitch);
+        BigDoors.getScheduler().runTask(loc, () -> {
+            final int range = BigDoors.get().getConfigLoader().getSoundRange();
+            if (range < 1)
+                return;
+            for (Entity ent : loc.getWorld().getNearbyEntities(loc, range, range, range))
+                if (ent instanceof Player)
+                    ((Player) ent).playSound(loc, sound, volume, pitch);
+        });
     }
 
     // Play sound at a location.
     public static void playSound(Location loc, String sound, float volume, float pitch)
     {
-
         BigDoors.getScheduler().callSyncMethod(() ->
         {
             playSoundSync(loc, sound, volume, pitch);

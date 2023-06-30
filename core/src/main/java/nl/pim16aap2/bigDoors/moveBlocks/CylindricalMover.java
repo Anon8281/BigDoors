@@ -1,5 +1,6 @@
 package nl.pim16aap2.bigDoors.moveBlocks;
 
+import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import nl.pim16aap2.bigDoors.BigDoors;
 import nl.pim16aap2.bigDoors.Door;
 import nl.pim16aap2.bigDoors.NMS.CustomCraftFallingBlock;
@@ -111,68 +112,73 @@ public class CylindricalMover extends BlockMover
                     Location newFBlockLocation = new Location(world, xAxis + 0.5, yAxis, zAxis + 0.5);
 
                     final Block vBlock = world.getBlockAt(xAxis, yAxis, zAxis);
-                    final Material mat = vBlock.getType();
+                    int finalXAxis = xAxis;
+                    int finalYAxis = yAxis;
+                    int finalZAxis = zAxis;
+                    BigDoors.getScheduler().runTask(vBlock.getLocation(), () -> {
+                        final Material mat = vBlock.getType();
 
-                    if (Util.isAllowedBlock(mat))
-                    {
-                        final byte matData = vBlock.getData();
-                        final BlockState bs = vBlock.getState();
-                        final MaterialData materialData = bs.getData();
-
-                        final NMSBlock block = fabf.nmsBlockFactory(world, xAxis, yAxis, zAxis);
-                        NMSBlock block2 = null;
-
-                        byte matByte = matData;
-                        final int canRotate = Util.canRotate(mat);
-
-                        // Rotate blocks here so they don't interrupt the rotation animation.
-                        if (canRotate != 0)
+                        if (Util.isAllowedBlock(mat))
                         {
-                            Location pos = new Location(world, xAxis, yAxis, zAxis);
-                            if (canRotate == 1 || canRotate == 3)
-                                matByte = rotateBlockDataLog(matData);
-                            else if (canRotate == 2)
-                                matByte = rotateBlockDataStairs(matData);
-                            else if (canRotate == 4)
-                                matByte = rotateBlockDataAnvil(matData);
-                            else if (canRotate == 7)
-                                matByte = rotateBlockDataEndRod(matData);
+                            final byte matData = vBlock.getData();
+                            final BlockState bs = vBlock.getState();
+                            final MaterialData materialData = bs.getData();
 
-                            Block b = world.getBlockAt(pos);
-                            materialData.setData(matByte);
+                            final NMSBlock block = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
+                            NMSBlock block2 = null;
 
-                            if (BigDoors.isOnFlattenedVersion())
+                            byte matByte = matData;
+                            final int canRotate = Util.canRotate(mat);
+
+                            // Rotate blocks here so they don't interrupt the rotation animation.
+                            if (canRotate != 0)
                             {
-                                if (canRotate == 6 || canRotate == 8 || canRotate == 9)
+                                Location pos = new Location(world, finalXAxis, finalYAxis, finalZAxis);
+                                if (canRotate == 1 || canRotate == 3)
+                                    matByte = rotateBlockDataLog(matData);
+                                else if (canRotate == 2)
+                                    matByte = rotateBlockDataStairs(matData);
+                                else if (canRotate == 4)
+                                    matByte = rotateBlockDataAnvil(matData);
+                                else if (canRotate == 7)
+                                    matByte = rotateBlockDataEndRod(matData);
+
+                                Block b = world.getBlockAt(pos);
+                                materialData.setData(matByte);
+
+                                if (BigDoors.isOnFlattenedVersion())
                                 {
-                                    block2 = fabf.nmsBlockFactory(world, xAxis, yAxis, zAxis);
-                                    block2.rotateCylindrical(this.rotDirection);
-                                }
-                                else
-                                {
-                                    b.setType(mat);
-                                    BlockState bs2 = b.getState();
-                                    bs2.setData(materialData);
-                                    bs2.update();
-                                    block2 = fabf.nmsBlockFactory(world, xAxis, yAxis, zAxis);
+                                    if (canRotate == 6 || canRotate == 8 || canRotate == 9)
+                                    {
+                                        block2 = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
+                                        block2.rotateCylindrical(this.rotDirection);
+                                    }
+                                    else
+                                    {
+                                        b.setType(mat);
+                                        BlockState bs2 = b.getState();
+                                        bs2.setData(materialData);
+                                        bs2.update();
+                                        block2 = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
+                                    }
                                 }
                             }
+                            if (!BigDoors.isOnFlattenedVersion() || UniversalScheduler.isFolia)
+                                vBlock.setType(Material.AIR);
+
+                            CustomCraftFallingBlock fBlock = null;
+                            if (!instantOpen)
+                                fBlock = fabf.fallingBlockFactory(newFBlockLocation, block, matData, mat);
+
+                            savedBlocks.add(new MyBlockData(mat, matByte, fBlock, radius, materialData,
+                                    block2 == null ? block : block2, canRotate, startLocation));
+
+                            if (finalXAxis == xMin || finalXAxis == xMax ||
+                                    finalYAxis == yMin || finalYAxis == yMax ||
+                                    finalZAxis == zMin || finalZAxis == zMax)
+                                edges.add(block);
                         }
-                        if (!BigDoors.isOnFlattenedVersion())
-                            vBlock.setType(Material.AIR);
-
-                        CustomCraftFallingBlock fBlock = null;
-                        if (!instantOpen)
-                            fBlock = fabf.fallingBlockFactory(newFBlockLocation, block, matData, mat);
-
-                        savedBlocks.add(new MyBlockData(mat, matByte, fBlock, radius, materialData,
-                                                        block2 == null ? block : block2, canRotate, startLocation));
-
-                        if (xAxis == xMin || xAxis == xMax ||
-                            yAxis == yMin || yAxis == yMax ||
-                            zAxis == zMin || zAxis == zMax)
-                            edges.add(block);
-                    }
+                    });
                 }
                 zAxis += dz;
             }
