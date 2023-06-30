@@ -92,7 +92,8 @@ public abstract class ProtectionCompatDefinition implements IProtectionCompatDef
     public static final IProtectionCompatDefinition MEDIEVAL_FACTIONS = new ProtectionCompatDefinition("MedievalFactions") {
         @Override public Class<? extends IProtectionCompat> getClass(String version)
         {
-            return MedievalFactionsProtectionCompat.class;
+            return null;
+//            return MedievalFactionsProtectionCompat.class;
         }
     };
 
@@ -127,7 +128,8 @@ public abstract class ProtectionCompatDefinition implements IProtectionCompatDef
         @Override
         public Class<? extends IProtectionCompat> getClass(String version)
         {
-            return KonquestProtectionCompat.class;
+            return null;
+//            return KonquestProtectionCompat.class;
         }
     };
 
