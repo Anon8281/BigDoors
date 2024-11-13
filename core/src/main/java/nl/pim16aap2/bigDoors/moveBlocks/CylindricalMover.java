@@ -94,6 +94,8 @@ public class CylindricalMover extends BlockMover
             new ArrayList<>(Math.min(door.getBlockCount(),
                                      (xMax - xMin + 1) * 2 + (yMax - yMin + 1) * 2 + (zMax - zMin + 1) * 2));
 
+        final FallingBlockFactory.Specification spec = createBlockFactorySpec(plugin);
+
         int xAxis = turningPoint.getBlockX();
         do
         {
@@ -112,19 +114,18 @@ public class CylindricalMover extends BlockMover
                     Location newFBlockLocation = new Location(world, xAxis + 0.5, yAxis, zAxis + 0.5);
 
                     final Block vBlock = world.getBlockAt(xAxis, yAxis, zAxis);
-                    int finalXAxis = xAxis;
-                    int finalYAxis = yAxis;
-                    int finalZAxis = zAxis;
+                    int finalXAxis1 = xAxis;
+                    int finalYAxis1 = yAxis;
+                    int finalZAxis1 = zAxis;
                     BigDoors.getScheduler().runTask(vBlock.getLocation(), () -> {
-                        final Material mat = vBlock.getType();
-
+                        Material mat = vBlock.getType();
                         if (Util.isAllowedBlock(mat))
                         {
                             final byte matData = vBlock.getData();
                             final BlockState bs = vBlock.getState();
                             final MaterialData materialData = bs.getData();
 
-                            final NMSBlock block = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
+                            final NMSBlock block = fabf.nmsBlockFactory(world, finalXAxis1, finalYAxis1, finalZAxis1);
                             NMSBlock block2 = null;
 
                             byte matByte = matData;
@@ -133,7 +134,7 @@ public class CylindricalMover extends BlockMover
                             // Rotate blocks here so they don't interrupt the rotation animation.
                             if (canRotate != 0)
                             {
-                                Location pos = new Location(world, finalXAxis, finalYAxis, finalZAxis);
+                                Location pos = new Location(world, finalXAxis1, finalYAxis1, finalZAxis1);
                                 if (canRotate == 1 || canRotate == 3)
                                     matByte = rotateBlockDataLog(matData);
                                 else if (canRotate == 2)
@@ -150,7 +151,7 @@ public class CylindricalMover extends BlockMover
                                 {
                                     if (canRotate == 6 || canRotate == 8 || canRotate == 9)
                                     {
-                                        block2 = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
+                                        block2 = fabf.nmsBlockFactory(world, finalXAxis1, finalYAxis1, finalZAxis1);
                                         block2.rotateCylindrical(this.rotDirection);
                                     }
                                     else
@@ -159,7 +160,7 @@ public class CylindricalMover extends BlockMover
                                         BlockState bs2 = b.getState();
                                         bs2.setData(materialData);
                                         bs2.update();
-                                        block2 = fabf.nmsBlockFactory(world, finalXAxis, finalYAxis, finalZAxis);
+                                        block2 = fabf.nmsBlockFactory(world, finalXAxis1, finalYAxis1, finalZAxis1);
                                     }
                                 }
                             }
@@ -168,14 +169,14 @@ public class CylindricalMover extends BlockMover
 
                             CustomCraftFallingBlock fBlock = null;
                             if (!instantOpen)
-                                fBlock = fabf.fallingBlockFactory(newFBlockLocation, block, matData, mat);
+                                fBlock = fabf.createFallingBlockWithMetadata(spec, newFBlockLocation, block, matData, mat);
 
                             savedBlocks.add(new MyBlockData(mat, matByte, fBlock, radius, materialData,
                                     block2 == null ? block : block2, canRotate, startLocation));
 
-                            if (finalXAxis == xMin || finalXAxis == xMax ||
-                                    finalYAxis == yMin || finalYAxis == yMax ||
-                                    finalZAxis == zMin || finalZAxis == zMax)
+                            if (finalXAxis1 == xMin || finalXAxis1 == xMax ||
+                                    finalYAxis1 == yMin || finalYAxis1 == yMax ||
+                                    finalZAxis1 == zMin || finalZAxis1 == zMax)
                                 edges.add(block);
                         }
                     });
@@ -305,6 +306,7 @@ public class CylindricalMover extends BlockMover
                     if (replace)
                         BigDoors.getScheduler().runTask(door.getChunkCoords(), () ->
                         {
+                            final FallingBlockFactory.Specification spec = createBlockFactorySpec(plugin);
                             for (MyBlockData block : savedBlocks)
                                 if (block.canRot() != 0 && block.canRot() != 5)
                                 {
@@ -317,7 +319,7 @@ public class CylindricalMover extends BlockMover
                                       CustomCraftFallingBlock fBlock;
                                       // Because the block in savedBlocks is already rotated where applicable, just
                                       // use that block now.
-                                      fBlock = fabf.fallingBlockFactory(loc, block.getBlock(), matData, mat);
+                                      fBlock = fabf.createFallingBlockWithMetadata(spec, loc, block.getBlock(), matData, mat);
 
                                       block.getFBlock().remove();
                                       block.setFBlock(fBlock);
